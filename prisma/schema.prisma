@@ -22,6 +22,7 @@ model User {
   phone                  String?
   password               String
   resetPasswordToken     String?
+  avatar                 String?
   roleId                 Int
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
@@ -34,12 +35,13 @@ model User {
 model Supplier {
   id                 Int      @id @default(autoincrement())
   email              String   @unique
-  ruc                Int      @unique
+  ruc                String   @unique
   representativeName String
   companyName        String
   phone              String
   password           String
   resetPasswordToken String?
+  avatar             String?
   roleId             Int
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
