@@ -5,7 +5,6 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('ContactController', () => {
   let controller: ContactController;
-  let service: ContactService;
 
   const mockContact = {
     id: 1,
@@ -35,7 +34,6 @@ describe('ContactController', () => {
     }).compile();
 
     controller = module.get<ContactController>(ContactController);
-    service = module.get<ContactService>(ContactService);
   });
 
   afterEach(() => {
@@ -53,7 +51,7 @@ describe('ContactController', () => {
 
     const result = await controller.create(dto);
 
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(contactServiceMock.create).toHaveBeenCalledWith(dto);
     expect(result).toEqual({
       status: 'success',
       message: 'Contact created successfully',
@@ -64,20 +62,20 @@ describe('ContactController', () => {
   it('should return all contacts', async () => {
     const result = await controller.findAll();
 
-    expect(service.findAll).toHaveBeenCalled();
+    expect(contactServiceMock.findAll).toHaveBeenCalled();
     expect(result).toEqual([mockContact]);
   });
 
   it('should return a contact by id', async () => {
     const result = await controller.findOne(1);
 
-    expect(service.findOne).toHaveBeenCalledWith(1);
+    expect(contactServiceMock.findOne).toHaveBeenCalledWith(1);
     expect(result).toEqual(mockContact);
   });
 
   it('should throw 404 if contact not found', async () => {
     jest
-      .spyOn(service, 'findOne')
+      .spyOn(contactServiceMock, 'findOne')
       .mockRejectedValueOnce(
         new NotFoundException('Contact not found with id: 99'),
       );
