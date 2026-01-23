@@ -9,7 +9,7 @@ datasource db {
 
 model Role {
   id        Int        @id @default(autoincrement())
-  name      String
+  name      String     @unique
   users     User[]
   suppliers Supplier[]
 }
@@ -55,7 +55,7 @@ model Supplier {
 model TourPackage {
   id                 Int                 @id @default(autoincrement())
   name               String
-  destinationId      Int
+  districtId         Int
   pricePersona       Decimal             @db.Decimal(10, 2)
   categoryPackageId  Int
   educationLevelId   Int
@@ -74,7 +74,9 @@ model TourPackage {
   categoryPackage CategoryPackage @relation(fields: [categoryPackageId], references: [id])
   educationLevel  EducationLevel  @relation(fields: [educationLevelId], references: [id])
   supplier        Supplier        @relation(fields: [supplierId], references: [id])
-  destination     Destination     @relation(fields: [destinationId], references: [id])
+  district        District        @relation(fields: [districtId], references: [id])
+
+  @@index([districtId])
 }
 
 model CategoryPackage {
@@ -88,7 +90,7 @@ model CategoryPackage {
 
 model EducationLevel {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -241,8 +243,34 @@ model Payment {
   createdAt DateTime @default(now())
 }
 
-model Destination {
-  id           Int           @id @default(autoincrement())
+model Department {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  provinces Province[]
+}
+
+model Province {
+  id           Int    @id @default(autoincrement())
   name         String
+  departmentId Int
+
+  department Department @relation(fields: [departmentId], references: [id])
+  districts  District[]
+
+  @@unique([name, departmentId])
+}
+
+model District {
+  id         Int     @id @default(autoincrement())
+  name       String
+  ubigeo     String  @unique
+  inei       String?
+  provinceId Int
+
+  province Province @relation(fields: [provinceId], references: [id])
+
   tourPackages TourPackage[]
+
+  @@unique([name, provinceId])
 }

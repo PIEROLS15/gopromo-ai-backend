@@ -45,7 +45,7 @@ CREATE TABLE "Supplier" (
 CREATE TABLE "TourPackage" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "destinationId" INTEGER NOT NULL,
+    "districtId" INTEGER NOT NULL,
     "pricePersona" DECIMAL(10,2) NOT NULL,
     "categoryPackageId" INTEGER NOT NULL,
     "educationLevelId" INTEGER NOT NULL,
@@ -219,12 +219,35 @@ CREATE TABLE "Payment" (
 );
 
 -- CreateTable
-CREATE TABLE "Destination" (
+CREATE TABLE "Department" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
 
-    CONSTRAINT "Destination_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Department_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "Province" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "departmentId" INTEGER NOT NULL,
+
+    CONSTRAINT "Province_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "District" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "ubigeo" TEXT NOT NULL,
+    "inei" TEXT,
+    "provinceId" INTEGER NOT NULL,
+
+    CONSTRAINT "District_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
@@ -234,6 +257,12 @@ CREATE UNIQUE INDEX "Supplier_email_key" ON "Supplier"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Supplier_ruc_key" ON "Supplier"("ruc");
+
+-- CreateIndex
+CREATE INDEX "TourPackage_districtId_idx" ON "TourPackage"("districtId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EducationLevel_name_key" ON "EducationLevel"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OfferTourPackage_offerId_tourPackageId_key" ON "OfferTourPackage"("offerId", "tourPackageId");
@@ -256,6 +285,18 @@ CREATE UNIQUE INDEX "ReservationDetailPromotion_reservationDetailId_promotionId_
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_reservationId_key" ON "Payment"("reservationId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Department_name_key" ON "Department"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Province_name_departmentId_key" ON "Province"("name", "departmentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "District_ubigeo_key" ON "District"("ubigeo");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "District_name_provinceId_key" ON "District"("name", "provinceId");
+
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -272,7 +313,7 @@ ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_educationLevelId_fkey" FOR
 ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_destinationId_fkey" FOREIGN KEY ("destinationId") REFERENCES "Destination"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "District"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TourImage" ADD CONSTRAINT "TourImage_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -315,3 +356,9 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_methodId_fkey" FOREIGN KEY ("metho
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "PaymentStatus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Province" ADD CONSTRAINT "Province_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "District" ADD CONSTRAINT "District_provinceId_fkey" FOREIGN KEY ("provinceId") REFERENCES "Province"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
