@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { resetSequence } from './shared/reset-sequence';
 
-const roles = [{ name: 'ADMIN' }, { name: 'SUPPLIER' }, { name: 'USER' }];
+const roles = [{ name: 'Admin' }, { name: 'Supplier' }, { name: 'User' }];
 
 export async function seedRoles(prisma: PrismaClient) {
   console.log('🌱 Seeding roles...');

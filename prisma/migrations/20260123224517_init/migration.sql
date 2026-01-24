@@ -35,6 +35,7 @@ CREATE TABLE "Supplier" (
     "resetPasswordToken" TEXT,
     "avatar" TEXT,
     "roleId" INTEGER NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
