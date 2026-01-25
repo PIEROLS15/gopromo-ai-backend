@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -60,37 +61,80 @@ export class AuthService {
         phone: dto.phone,
         password: await hashPassword(dto.password),
         roleId: 2,
+        active: true,
+        verified: false,
       },
       include: { role: true },
     });
   }
 
   async login(dto: LoginDto) {
-    const user =
-      (await this.prisma.user.findUnique({
-        where: { email: dto.email },
-        include: { role: true },
-      })) ??
-      (await this.prisma.supplier.findUnique({
-        where: { email: dto.email },
-        include: { role: true },
-      }));
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: { role: true },
+    });
 
-    if (!user) {
+    const supplier = !user
+      ? await this.prisma.supplier.findUnique({
+          where: { email: dto.email },
+          include: { role: true },
+        })
+      : null;
+
+    if (!user && !supplier) {
       throw new NotFoundException('User not found with the provided email');
     }
 
-    const isValid = await comparePassword(dto.password, user.password);
+    const entity = user ?? supplier!;
+
+    if ('active' in entity && !entity.active) {
+      throw new UnauthorizedException('Supplier account is inactive');
+    }
+
+    if ('verified' in entity && !entity.verified) {
+      throw new ForbiddenException(
+        'Your supplier account is pending approval by an administrator',
+      );
+    }
+
+    const isValid = await comparePassword(dto.password, entity.password);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const token = this.jwt.sign({
-      sub: user.id,
-      role: user.role.name,
+      sub: entity.id,
+      role: entity.role.name,
     });
 
-    return { user, token };
+    const responseUser =
+      'educationalInstitution' in entity
+        ? {
+            id: entity.id,
+            email: entity.email,
+            fullName: entity.fullName,
+            educationalInstitution: entity.educationalInstitution,
+            phone: entity.phone,
+            avatar: entity.avatar,
+            role: entity.role,
+          }
+        : {
+            id: entity.id,
+            email: entity.email,
+            ruc: entity.ruc,
+            representativeName: entity.representativeName,
+            companyName: entity.companyName,
+            phone: entity.phone,
+            avatar: entity.avatar,
+            active: entity.active,
+            verified: entity.verified,
+            role: entity.role,
+          };
+
+    return {
+      user: responseUser,
+      token,
+    };
   }
 }
