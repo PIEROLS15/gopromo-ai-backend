@@ -22,10 +22,21 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-
     const user = request.user;
 
-    if (!user || !requiredRoles.includes(user.role.name)) {
+    if (!user) {
+      throw new ForbiddenException(
+        'You do not have permission to perform this action',
+      );
+    }
+
+    if (user.role.name === 'Supplier' && 'verified' in user && !user.verified) {
+      throw new ForbiddenException(
+        'Your supplier account has not been verified yet',
+      );
+    }
+
+    if (!requiredRoles.includes(user.role.name)) {
       throw new ForbiddenException(
         'You do not have permission to perform this action',
       );

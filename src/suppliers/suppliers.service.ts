@@ -17,10 +17,17 @@ export class SuppliersService {
     const limit = Number(query.limit ?? 10);
     const skip = (page - 1) * limit;
 
-    const where =
-      query.active !== undefined
-        ? { active: query.active === 'true' }
-        : { active: true };
+    const where: any = {};
+
+    if (query.active !== undefined) {
+      where.active = query.active === 'true';
+    } else {
+      where.active = true;
+    }
+
+    if (query.verified !== undefined) {
+      where.verified = query.verified === 'true';
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.supplier.findMany({
@@ -35,6 +42,7 @@ export class SuppliersService {
           phone: true,
           avatar: true,
           active: true,
+          verified: true,
           createdAt: true,
         },
       }),
@@ -64,6 +72,7 @@ export class SuppliersService {
         phone: true,
         avatar: true,
         active: true,
+        verified: true,
         createdAt: true,
       },
     });
@@ -122,6 +131,31 @@ export class SuppliersService {
     await this.prisma.supplier.update({
       where: { id },
       data: { active: true },
+    });
+  }
+
+  async approve(id: number) {
+    const supplier = await this.findOne(id);
+
+    if (supplier.verified) {
+      throw new ConflictException('Supplier is already verified');
+    }
+
+    return this.prisma.supplier.update({
+      where: { id },
+      data: { verified: true },
+      select: {
+        id: true,
+        email: true,
+        ruc: true,
+        representativeName: true,
+        companyName: true,
+        phone: true,
+        avatar: true,
+        roleId: true,
+        active: true,
+        verified: true,
+      },
     });
   }
 

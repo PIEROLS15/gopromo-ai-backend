@@ -84,6 +84,18 @@ export class SuppliersController {
   }
 
   @Roles('Admin')
+  @Patch(':id/approve')
+  async approve(@Param('id', ParseIntPipe) id: number) {
+    const supplier = await this.suppliersService.approve(id);
+
+    return {
+      status: 'success',
+      message: 'Supplier approved successfully',
+      data: supplier,
+    };
+  }
+
+  @Roles('Admin')
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.suppliersService.remove(id);

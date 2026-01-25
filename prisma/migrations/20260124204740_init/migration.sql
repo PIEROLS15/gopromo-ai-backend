@@ -36,6 +36,7 @@ CREATE TABLE "Supplier" (
     "avatar" TEXT,
     "roleId" INTEGER NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

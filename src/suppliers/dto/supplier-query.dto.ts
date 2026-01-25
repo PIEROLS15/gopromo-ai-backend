@@ -7,6 +7,10 @@ export class SupplierQueryDto {
   active?: string;
 
   @IsOptional()
+  @IsBooleanString()
+  verified?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsPositive()
   page?: number;
