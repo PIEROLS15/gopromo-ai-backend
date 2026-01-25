@@ -34,6 +34,18 @@ describe('SuppliersController', () => {
     deactivate: jest.fn().mockResolvedValue(undefined),
     activate: jest.fn().mockResolvedValue(undefined),
     remove: jest.fn().mockResolvedValue(undefined),
+    approve: jest.fn().mockResolvedValue({
+      id: 3,
+      email: 'ventas@inkatours.pe',
+      ruc: '20123456789',
+      representativeName: 'Carlos Perez',
+      companyName: 'Inka Tours SAC',
+      phone: '+51987654321',
+      avatar: null,
+      roleId: 2,
+      active: true,
+      verified: true,
+    }),
   };
 
   beforeEach(async () => {
@@ -105,6 +117,15 @@ describe('SuppliersController', () => {
     await controller.activate(3);
 
     expect(suppliersServiceMock.activate).toHaveBeenCalledWith(3);
+  });
+
+  it('should approve supplier', async () => {
+    const result = await controller.approve(3);
+
+    expect(result.status).toBe('success');
+    expect(result.message).toBe('Supplier approved successfully');
+    expect(result.data.verified).toBe(true);
+    expect(suppliersServiceMock.approve).toHaveBeenCalledWith(3);
   });
 
   it('should delete supplier', async () => {
