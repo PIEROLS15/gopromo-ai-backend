@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { LocationsModule } from './locations/locations.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { EducationLevelsModule } from './education-levels/education-levels.module';
+import { CategoryPackagesModule } from './category-packages/category-packages.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { EducationLevelsModule } from './education-levels/education-levels.modul
     LocationsModule,
     SuppliersModule,
     EducationLevelsModule,
+    CategoryPackagesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

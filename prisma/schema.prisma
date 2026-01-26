@@ -36,8 +36,8 @@ model Supplier {
   id                 Int      @id @default(autoincrement())
   email              String   @unique
   ruc                String   @unique
-  representativeName String
-  companyName        String
+  representativeName String   @unique
+  companyName        String   @unique
   phone              String
   password           String
   resetPasswordToken String?
@@ -56,7 +56,7 @@ model Supplier {
 
 model TourPackage {
   id                 Int                 @id @default(autoincrement())
-  name               String
+  name               String              @unique
   districtId         Int
   pricePersona       Decimal             @db.Decimal(10, 2)
   categoryPackageId  Int
@@ -83,7 +83,7 @@ model TourPackage {
 
 model CategoryPackage {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -136,7 +136,7 @@ model Promotion {
 
 model Offer {
   id              Int      @id @default(autoincrement())
-  name            String
+  name            String   @unique
   description     String?
   discountPercent Float
   startDate       DateTime
