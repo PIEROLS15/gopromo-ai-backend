@@ -261,10 +261,25 @@ CREATE UNIQUE INDEX "Supplier_email_key" ON "Supplier"("email");
 CREATE UNIQUE INDEX "Supplier_ruc_key" ON "Supplier"("ruc");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Supplier_representativeName_key" ON "Supplier"("representativeName");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Supplier_companyName_key" ON "Supplier"("companyName");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TourPackage_name_key" ON "TourPackage"("name");
+
+-- CreateIndex
 CREATE INDEX "TourPackage_districtId_idx" ON "TourPackage"("districtId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "CategoryPackage_name_key" ON "CategoryPackage"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "EducationLevel_name_key" ON "EducationLevel"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Offer_name_key" ON "Offer"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OfferTourPackage_offerId_tourPackageId_key" ON "OfferTourPackage"("offerId", "tourPackageId");
