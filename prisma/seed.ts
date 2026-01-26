@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { seedRoles } from './seeds/roles.seed';
 import { seedUbigeo } from './seeds/ubigeo.seed';
+import { seedEducationLevels } from './seeds/education-levels.seed';
+import { seedSuppliers } from './seeds/suppliers.seed';
 
 const prisma = new PrismaClient();
 
@@ -14,6 +16,9 @@ async function main() {
   //Orden importa por FK
   await seedRoles(prisma);
   await seedUbigeo(prisma);
+  await seedEducationLevels(prisma);
+
+  await seedSuppliers(prisma);
 
   console.log('🎉 All seeds executed successfully');
 }
