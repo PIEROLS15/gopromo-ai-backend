@@ -8,6 +8,7 @@ import { LocationsModule } from './locations/locations.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { EducationLevelsModule } from './education-levels/education-levels.module';
 import { CategoryPackagesModule } from './category-packages/category-packages.module';
+import { TourPackagesModule } from './tour-packages/tour-packages.module';
 
 @Module({
   imports: [
@@ -17,8 +18,9 @@ import { CategoryPackagesModule } from './category-packages/category-packages.mo
     SuppliersModule,
     EducationLevelsModule,
     CategoryPackagesModule,
+    TourPackagesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule { }

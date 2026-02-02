@@ -4,6 +4,7 @@ import { seedUbigeo } from './seeds/ubigeo.seed';
 import { seedEducationLevels } from './seeds/education-levels.seed';
 import { seedSuppliers } from './seeds/suppliers.seed';
 import { seedCategoryPackages } from './seeds/category-packages.seed';
+import { seedTourPackages } from './seeds/tour-packages.seed';
 
 const prisma = new PrismaClient();
 
@@ -21,6 +22,7 @@ async function main() {
   await seedCategoryPackages(prisma);
 
   await seedSuppliers(prisma);
+  await seedTourPackages(prisma);
 
   console.log('🎉 All seeds executed successfully');
 }
