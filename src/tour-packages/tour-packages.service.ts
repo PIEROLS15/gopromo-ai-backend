@@ -10,7 +10,7 @@ import { TourPackageQueryDto } from './dto/tour-package-query.dto';
 
 @Injectable()
 export class TourPackagesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTourPackageDto) {
     const exists = await this.prisma.tourPackage.findFirst({
@@ -168,26 +168,29 @@ export class TourPackagesService {
         id: tour.supplier.id,
         companyName: tour.supplier.companyName,
       },
-      promotions: tour.promotions?.map((p: any) => ({
-        id: p.id,
-        price: Number(p.price),
-        name: p.name,
-        description: p.description,
-        supplier: {
-          id: p.supplier.id,
-          companyName: p.supplier.companyName,
-        },
-      })) || [],
-      offers: tour.offers?.map((o: any) => ({
-        id: o.offer.id,
-        price: Number(tour.pricePersona) * (1 - (o.offer.discountPercent / 100)),
-        name: o.offer.name,
-        description: o.offer.description,
-        discountPercent: o.offer.discountPercent,
-        startDate: o.offer.startDate,
-        endDate: o.offer.endDate,
-        isGlobal: o.offer.isGlobal,
-      })) || [],
+      promotions:
+        tour.promotions?.map((p: any) => ({
+          id: p.id,
+          price: Number(p.price),
+          name: p.name,
+          description: p.description,
+          supplier: {
+            id: p.supplier.id,
+            companyName: p.supplier.companyName,
+          },
+        })) || [],
+      offers:
+        tour.offers?.map((o: any) => ({
+          id: o.offer.id,
+          price:
+            Number(tour.pricePersona) * (1 - o.offer.discountPercent / 100),
+          name: o.offer.name,
+          description: o.offer.description,
+          discountPercent: o.offer.discountPercent,
+          startDate: o.offer.startDate,
+          endDate: o.offer.endDate,
+          isGlobal: o.offer.isGlobal,
+        })) || [],
       images: tour.images.map((img: any) => ({
         id: img.id,
         url: img.url,
@@ -203,17 +206,19 @@ export class TourPackagesService {
       throw new NotFoundException('Tour package not found');
     }
 
-    return this.prisma.tourPackage.update({
-      where: { id },
-      data: dto,
-      select: {
-        id: true,
-        pricePersona: true,
-      },
-    }).then(res => ({
-      ...res,
-      pricePersona: Number(res.pricePersona)
-    }));
+    return this.prisma.tourPackage
+      .update({
+        where: { id },
+        data: dto,
+        select: {
+          id: true,
+          pricePersona: true,
+        },
+      })
+      .then((res) => ({
+        ...res,
+        pricePersona: Number(res.pricePersona),
+      }));
   }
 
   async deactivate(id: number) {
@@ -256,8 +261,8 @@ export class TourPackagesService {
       include: {
         reservationDetails: {
           include: {
-            reservation: true
-          }
+            reservation: true,
+          },
         },
       },
     });
@@ -267,7 +272,7 @@ export class TourPackagesService {
     }
 
     const hasActiveReservations = tour.reservationDetails.some(
-      (rd) => rd.reservation.statusId !== 3
+      (rd) => rd.reservation.statusId !== 3,
     );
 
     if (hasActiveReservations) {

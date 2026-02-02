@@ -8,4 +8,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   controllers: [TourPackagesController],
   providers: [TourPackagesService],
 })
-export class TourPackagesModule { }
+export class TourPackagesModule {}

@@ -23,4 +23,4 @@ import { TourPackagesModule } from './tour-packages/tour-packages.module';
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule { }
+export class AppModule {}

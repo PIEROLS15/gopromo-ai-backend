@@ -22,7 +22,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('tour-packages')
 export class TourPackagesController {
-  constructor(private readonly service: TourPackagesService) { }
+  constructor(private readonly service: TourPackagesService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin', 'Supplier')
