@@ -55,7 +55,7 @@ CREATE TABLE "TourPackage" (
     "activities" TEXT[],
     "includes" TEXT[],
     "supplierId" INTEGER NOT NULL,
-    "active" BOOLEAN NOT NULL DEFAULT true,
+    "active" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
