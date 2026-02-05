@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -89,12 +88,6 @@ export class AuthService {
 
     if ('active' in entity && !entity.active) {
       throw new UnauthorizedException('Supplier account is inactive');
-    }
-
-    if ('verified' in entity && !entity.verified) {
-      throw new ForbiddenException(
-        'Your supplier account is pending approval by an administrator',
-      );
     }
 
     const isValid = await comparePassword(dto.password, entity.password);
