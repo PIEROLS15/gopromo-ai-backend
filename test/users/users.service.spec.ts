@@ -245,7 +245,9 @@ describe('UsersService', () => {
 
       await service.remove(15, 1);
 
-      expect(prismaMock.user.delete).toHaveBeenCalledWith({ where: { id: 15 } });
+      expect(prismaMock.user.delete).toHaveBeenCalledWith({
+        where: { id: 15 },
+      });
     });
   });
 });

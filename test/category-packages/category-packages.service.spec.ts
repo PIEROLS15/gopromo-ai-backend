@@ -45,7 +45,10 @@ describe('CategoryPackagesService', () => {
 
   it('should create category package', async () => {
     prismaMock.categoryPackage.findUnique.mockResolvedValue(null);
-    prismaMock.categoryPackage.create.mockResolvedValue({ id: 1, name: 'Aventura' });
+    prismaMock.categoryPackage.create.mockResolvedValue({
+      id: 1,
+      name: 'Aventura',
+    });
 
     const result = await service.create({ name: 'Aventura' });
 
@@ -54,7 +57,9 @@ describe('CategoryPackagesService', () => {
   });
 
   it('should return paginated categories', async () => {
-    prismaMock.categoryPackage.findMany.mockResolvedValue([{ id: 1, name: 'Aventura' }]);
+    prismaMock.categoryPackage.findMany.mockResolvedValue([
+      { id: 1, name: 'Aventura' },
+    ]);
     prismaMock.categoryPackage.count.mockResolvedValue(1);
 
     const result = await service.findAll({ page: 1, limit: 10 });
@@ -84,7 +89,10 @@ describe('CategoryPackagesService', () => {
   });
 
   it('should throw conflict when deleting category with related packages', async () => {
-    prismaMock.categoryPackage.findUnique.mockResolvedValue({ id: 1, name: 'Aventura' });
+    prismaMock.categoryPackage.findUnique.mockResolvedValue({
+      id: 1,
+      name: 'Aventura',
+    });
     prismaMock.tourPackage.findFirst.mockResolvedValue({ id: 100 });
 
     await expect(service.remove(1)).rejects.toThrow(ConflictException);

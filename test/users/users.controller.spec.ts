@@ -6,6 +6,7 @@ import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { ForbiddenException } from '@nestjs/common';
 import { UpdateProfileDto } from '../../src/users/dto/update-profile.dto';
 import { UpdateUserDto } from '../../src/users/dto/update-user.dto';
+import type { AuthenticatedRequest } from '../../src/auth/types/auth-request.type';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -65,32 +66,45 @@ describe('UsersController', () => {
   });
 
   it('should update authenticated user profile', async () => {
-    const req = { user: { id: 15, fullName: 'Piero', role: { name: 'User' } } } as any;
+    const req = {
+      user: { id: 15, fullName: 'Piero', role: { name: 'User' } },
+    } as unknown as AuthenticatedRequest;
     const dto: UpdateProfileDto = { fullName: 'Piero Llanos' };
 
     const result = await controller.updateMyProfile(req, dto);
 
     expect(result.status).toBe('success');
     expect(result.message).toBe('Profile updated successfully');
-    expect(usersServiceMock.updateProfile).toHaveBeenCalledWith(15, dto, 'user');
+    expect(usersServiceMock.updateProfile).toHaveBeenCalledWith(
+      15,
+      dto,
+      'user',
+    );
   });
 
   it('should update authenticated supplier profile', async () => {
     const req = {
       user: { id: 3, representativeName: 'Carlos', role: { name: 'Supplier' } },
-    } as any;
+    } as unknown as AuthenticatedRequest;
     const dto: UpdateProfileDto = { representativeName: 'Carlos Perez' };
 
     await controller.updateMyProfile(req, dto);
 
-    expect(usersServiceMock.updateProfile).toHaveBeenCalledWith(3, dto, 'supplier');
+    expect(usersServiceMock.updateProfile).toHaveBeenCalledWith(
+      3,
+      dto,
+      'supplier',
+    );
   });
 
   it('should return users list', async () => {
     const result = await controller.findAll({ page: 1, limit: 10 });
 
     expect(result.data).toHaveLength(1);
-    expect(usersServiceMock.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
+    expect(usersServiceMock.findAll).toHaveBeenCalledWith({
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('should return user by id', async () => {
@@ -116,7 +130,9 @@ describe('UsersController', () => {
   });
 
   it('should delete user as admin', async () => {
-    const req = { user: { id: 1, fullName: 'Admin', role: { name: 'Admin' } } } as any;
+    const req = {
+      user: { id: 1, fullName: 'Admin', role: { name: 'Admin' } },
+    } as unknown as AuthenticatedRequest;
 
     const result = await controller.remove(req, 15);
 
@@ -128,9 +144,11 @@ describe('UsersController', () => {
   it('should throw forbidden when supplier tries deleting user', async () => {
     const req = {
       user: { id: 3, representativeName: 'Carlos', role: { name: 'Supplier' } },
-    } as any;
+    } as unknown as AuthenticatedRequest;
 
-    await expect(controller.remove(req, 15)).rejects.toThrow(ForbiddenException);
+    await expect(controller.remove(req, 15)).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(usersServiceMock.remove).not.toHaveBeenCalled();
   });
 });

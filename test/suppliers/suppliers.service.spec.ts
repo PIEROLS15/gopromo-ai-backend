@@ -21,7 +21,10 @@ describe('SuppliersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SuppliersService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        SuppliersService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
 
     service = module.get<SuppliersService>(SuppliersService);
@@ -90,6 +93,8 @@ describe('SuppliersService', () => {
 
     await service.remove(3);
 
-    expect(prismaMock.supplier.delete).toHaveBeenCalledWith({ where: { id: 3 } });
+    expect(prismaMock.supplier.delete).toHaveBeenCalledWith({
+      where: { id: 3 },
+    });
   });
 });

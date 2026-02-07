@@ -32,7 +32,11 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ) {
     const actorType = 'fullName' in req.user ? 'user' : 'supplier';
-    const user = await this.usersService.updateProfile(req.user.id, dto, actorType);
+    const user = await this.usersService.updateProfile(
+      req.user.id,
+      dto,
+      actorType,
+    );
 
     return {
       status: 'success',
@@ -55,7 +59,10 @@ export class UsersController {
 
   @Roles('Admin')
   @Put(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserDto,
+  ) {
     const user = await this.usersService.update(id, dto);
 
     return {

@@ -14,7 +14,11 @@ import { hashPassword } from '../auth/utils/password.util';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async updateProfile(id: number, dto: UpdateProfileDto, actorType: 'user' | 'supplier') {
+  async updateProfile(
+    id: number,
+    dto: UpdateProfileDto,
+    actorType: 'user' | 'supplier',
+  ) {
     if (actorType === 'user') {
       await this.findOne(id);
 
