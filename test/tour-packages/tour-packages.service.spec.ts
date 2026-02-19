@@ -11,6 +11,8 @@ describe('TourPackagesService', () => {
     id: 1,
     name: 'Tour Test',
     pricePersona: 100,
+    days: 3,
+    minStudents: 10,
     active: true,
     description: 'Description',
     activities: [],
@@ -74,6 +76,8 @@ describe('TourPackagesService', () => {
       const result = await service.create(dto);
 
       expect(result.name).toBe(mockTourPackage.name);
+      expect(result.days).toBe(3);
+      expect(result.minStudents).toBe(10);
       expect(prismaMock.tourPackage.create).toHaveBeenCalled();
     });
   });

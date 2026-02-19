@@ -26,6 +26,7 @@ export class UsersService {
         where: { id },
         data: {
           fullName: dto.fullName,
+          educationalInstitution: dto.educationalInstitution,
           phone: dto.phone,
           avatar: dto.avatar,
           password: dto.password ? await hashPassword(dto.password) : undefined,
@@ -34,6 +35,7 @@ export class UsersService {
           id: true,
           email: true,
           fullName: true,
+          educationalInstitution: true,
           phone: true,
           avatar: true,
         },

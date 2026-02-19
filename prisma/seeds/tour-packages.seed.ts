@@ -112,6 +112,8 @@ export async function seedTourPackages(prisma: PrismaClient) {
         name: pkgData.name,
         description: pkgData.description,
         pricePersona: pkgData.pricePersona,
+        days: 2 + (i % 5),
+        minStudents: 5 + (i % 6),
         activities: pkgData.activities,
         includes: pkgData.includes,
         active: true,
