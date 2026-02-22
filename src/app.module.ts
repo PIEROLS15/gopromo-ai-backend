@@ -10,6 +10,7 @@ import { EducationLevelsModule } from './education-levels/education-levels.modul
 import { CategoryPackagesModule } from './category-packages/category-packages.module';
 import { TourPackagesModule } from './tour-packages/tour-packages.module';
 import { UsersModule } from './users/users.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from './users/users.module';
     CategoryPackagesModule,
     TourPackagesModule,
     UsersModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

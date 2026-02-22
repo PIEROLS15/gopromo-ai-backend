@@ -20,6 +20,14 @@ export class CreateTourPackageDto {
   pricePersona: number;
 
   @IsInt()
+  @IsPositive()
+  days: number;
+
+  @IsInt()
+  @IsPositive()
+  minStudents: number;
+
+  @IsInt()
   categoryPackageId: number;
 
   @IsInt()

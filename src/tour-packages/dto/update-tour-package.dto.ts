@@ -23,6 +23,16 @@ export class UpdateTourPackageDto {
 
   @IsOptional()
   @IsInt()
+  @IsPositive()
+  days?: number;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  minStudents?: number;
+
+  @IsOptional()
+  @IsInt()
   categoryPackageId?: number;
 
   @IsOptional()

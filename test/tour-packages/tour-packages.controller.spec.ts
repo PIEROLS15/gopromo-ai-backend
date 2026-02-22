@@ -13,6 +13,8 @@ describe('TourPackagesController', () => {
     id: 1,
     name: 'Tour Test',
     pricePersona: 350,
+    days: 2,
+    minStudents: 8,
   };
 
   const tourPackagesServiceMock = {

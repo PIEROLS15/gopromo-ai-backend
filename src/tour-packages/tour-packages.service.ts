@@ -143,6 +143,8 @@ export class TourPackagesService {
       id: tour.id,
       name: tour.name,
       pricePersona: Number(tour.pricePersona),
+      days: tour.days,
+      minStudents: tour.minStudents,
       active: tour.active,
       description: tour.description,
       activities: tour.activities,

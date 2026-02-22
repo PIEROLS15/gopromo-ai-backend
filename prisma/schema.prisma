@@ -64,6 +64,8 @@ model TourPackage {
   description        String
   activities         String[]
   includes           String[]
+  days               Int                 @default(1)
+  minStudents        Int                 @default(1)
   images             TourImage[]
   supplierId         Int
   promotions         Promotion[]

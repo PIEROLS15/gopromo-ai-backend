@@ -56,6 +56,7 @@ describe('UsersService', () => {
         id: 15,
         email: 'piero@gmail.com',
         fullName: 'Piero Llanos Gomez',
+        educationalInstitution: 'Universidad Nacional Mayor de San Marcos',
         phone: '+51999999999',
         avatar: 'https://cdn.app/new-avatar.png',
       });
@@ -64,6 +65,7 @@ describe('UsersService', () => {
         15,
         {
           fullName: 'Piero Llanos Gomez',
+          educationalInstitution: 'Universidad Nacional Mayor de San Marcos',
           phone: '+51999999999',
           avatar: 'https://cdn.app/new-avatar.png',
           password: 'NewPass123',
@@ -77,6 +79,7 @@ describe('UsersService', () => {
           where: { id: 15 },
           data: expect.objectContaining({
             fullName: 'Piero Llanos Gomez',
+            educationalInstitution: 'Universidad Nacional Mayor de San Marcos',
             phone: '+51999999999',
             avatar: 'https://cdn.app/new-avatar.png',
             password: 'hashed-password',

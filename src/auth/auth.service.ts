@@ -96,9 +96,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    const isUser = 'educationalInstitution' in entity;
+
     const token = this.jwt.sign({
       sub: entity.id,
       role: entity.role.name,
+      entityType: isUser ? 'user' : 'supplier',
     });
 
     const responseUser =
