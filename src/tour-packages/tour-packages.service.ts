@@ -21,26 +21,47 @@ export class TourPackagesService {
       throw new ConflictException('Tour package with this name already exists');
     }
 
+    await this.ensureRelationsExist(dto);
+
     const tour = await this.prisma.tourPackage.create({
       data: {
-        ...dto,
+        name: dto.name,
+        districtId: dto.districtId,
+        pricePersona: dto.pricePersona,
+        categoryPackageId: dto.categoryPackageId,
+        educationLevelId: dto.educationLevelId,
+        description: dto.description,
+        days: dto.days,
+        minStudents: dto.minStudents,
+        supplierId: dto.supplierId,
         active: true,
-      },
-      include: {
-        district: {
-          include: {
-            province: {
-              include: {
-                department: true,
-              },
+        travelInsurance: dto.services.travel_insurance,
+        transport: dto.services.transport,
+        feeding: dto.services.feeding,
+        lodging: dto.services.lodging,
+        availableMonday: dto.reservation_days.monday,
+        availableTuesday: dto.reservation_days.tuesday,
+        availableWednesday: dto.reservation_days.wednesday,
+        availableThursday: dto.reservation_days.thursday,
+        availableFriday: dto.reservation_days.friday,
+        availableSaturday: dto.reservation_days.saturday,
+        availableSunday: dto.reservation_days.sunday,
+        itineraryDays: {
+          create: dto.itinerary.days.map((itineraryDay) => ({
+            day: itineraryDay.day,
+            title: itineraryDay.title,
+            steps: {
+              create: itineraryDay.steps.map((step) => ({
+                title: step.title,
+                hour: this.timeToDate(step.hour),
+                description: step.description,
+                order: step.order,
+              })),
             },
-          },
+          })),
         },
-        categoryPackage: true,
-        educationLevel: true,
-        supplier: true,
-        images: true,
       },
+      include: this.buildInclude(),
     });
 
     return this.mapTourPackageResponse(tour);
@@ -61,31 +82,7 @@ export class TourPackagesService {
         where,
         skip,
         take: limit,
-        include: {
-          district: {
-            include: {
-              province: {
-                include: {
-                  department: true,
-                },
-              },
-            },
-          },
-          categoryPackage: true,
-          educationLevel: true,
-          supplier: true,
-          images: true,
-          promotions: {
-            include: {
-              supplier: true,
-            },
-          },
-          offers: {
-            include: {
-              offer: true,
-            },
-          },
-        },
+        include: this.buildInclude(),
       }),
       this.prisma.tourPackage.count({ where }),
     ]);
@@ -104,31 +101,7 @@ export class TourPackagesService {
   async findOne(id: number) {
     const tour = await this.prisma.tourPackage.findUnique({
       where: { id },
-      include: {
-        district: {
-          include: {
-            province: {
-              include: {
-                department: true,
-              },
-            },
-          },
-        },
-        categoryPackage: true,
-        educationLevel: true,
-        supplier: true,
-        images: true,
-        promotions: {
-          include: {
-            supplier: true,
-          },
-        },
-        offers: {
-          include: {
-            offer: true,
-          },
-        },
-      },
+      include: this.buildInclude(),
     });
 
     if (!tour) {
@@ -147,8 +120,35 @@ export class TourPackagesService {
       minStudents: tour.minStudents,
       active: tour.active,
       description: tour.description,
-      activities: tour.activities,
-      includes: tour.includes,
+      services: {
+        travel_insurance: tour.travelInsurance,
+        transport: tour.transport,
+        feeding: tour.feeding,
+        lodging: tour.lodging,
+      },
+      reservation_days: {
+        monday: tour.availableMonday,
+        tuesday: tour.availableTuesday,
+        wednesday: tour.availableWednesday,
+        thursday: tour.availableThursday,
+        friday: tour.availableFriday,
+        saturday: tour.availableSaturday,
+        sunday: tour.availableSunday,
+      },
+      itinerary: {
+        days:
+          tour.itineraryDays?.map((day: any) => ({
+            day: day.day,
+            title: day.title,
+            steps:
+              day.steps?.map((step: any) => ({
+                title: step.title,
+                hour: this.dateToTime(step.hour),
+                description: step.description,
+                order: step.order,
+              })) || [],
+          })) || [],
+      },
       district: {
         name: tour.district.name,
         province: {
@@ -208,19 +208,66 @@ export class TourPackagesService {
       throw new NotFoundException('Tour package not found');
     }
 
-    return this.prisma.tourPackage
-      .update({
-        where: { id },
-        data: dto,
-        select: {
-          id: true,
-          pricePersona: true,
-        },
-      })
-      .then((res) => ({
-        ...res,
-        pricePersona: Number(res.pricePersona),
-      }));
+    if (dto.name && dto.name !== tour.name) {
+      const exists = await this.prisma.tourPackage.findFirst({
+        where: { name: dto.name },
+      });
+
+      if (exists) {
+        throw new ConflictException(
+          'Tour package with this name already exists',
+        );
+      }
+    }
+
+    if (
+      dto.districtId ||
+      dto.categoryPackageId ||
+      dto.educationLevelId ||
+      dto.supplierId
+    ) {
+      await this.ensureRelationsExist({
+        districtId: dto.districtId ?? tour.districtId,
+        categoryPackageId: dto.categoryPackageId ?? tour.categoryPackageId,
+        educationLevelId: dto.educationLevelId ?? tour.educationLevelId,
+        supplierId: dto.supplierId ?? tour.supplierId,
+      });
+    }
+
+    const updated = await this.prisma.tourPackage.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        districtId: dto.districtId,
+        pricePersona: dto.pricePersona,
+        categoryPackageId: dto.categoryPackageId,
+        educationLevelId: dto.educationLevelId,
+        description: dto.description,
+        days: dto.days,
+        minStudents: dto.minStudents,
+        supplierId: dto.supplierId,
+        travelInsurance: dto.services?.travel_insurance,
+        transport: dto.services?.transport,
+        feeding: dto.services?.feeding,
+        lodging: dto.services?.lodging,
+        availableMonday: dto.reservation_days?.monday,
+        availableTuesday: dto.reservation_days?.tuesday,
+        availableWednesday: dto.reservation_days?.wednesday,
+        availableThursday: dto.reservation_days?.thursday,
+        availableFriday: dto.reservation_days?.friday,
+        availableSaturday: dto.reservation_days?.saturday,
+        availableSunday: dto.reservation_days?.sunday,
+      },
+      select: {
+        id: true,
+        pricePersona: true,
+      },
+    });
+
+    return {
+      ...updated,
+      pricePersona: Number(updated.pricePersona),
+    };
   }
 
   async deactivate(id: number) {
@@ -274,7 +321,7 @@ export class TourPackagesService {
     }
 
     const hasActiveReservations = tour.reservationDetails.some(
-      (rd) => rd.reservation.statusId !== 3,
+      (rd) => rd.reservation.status !== 'Cancelled',
     );
 
     if (hasActiveReservations) {
@@ -314,33 +361,105 @@ export class TourPackagesService {
         ],
         active: true,
       },
-      include: {
-        district: {
-          include: {
-            province: {
-              include: {
-                department: true,
-              },
-            },
-          },
-        },
-        categoryPackage: true,
-        educationLevel: true,
-        supplier: true,
-        images: true,
-        promotions: {
-          include: {
-            supplier: true,
-          },
-        },
-        offers: {
-          include: {
-            offer: true,
-          },
-        },
-      },
+      include: this.buildInclude(),
     });
 
     return tours.map((t) => this.mapTourPackageResponse(t));
+  }
+
+  private buildInclude() {
+    return {
+      district: {
+        include: {
+          province: {
+            include: {
+              department: true,
+            },
+          },
+        },
+      },
+      categoryPackage: true,
+      educationLevel: true,
+      supplier: true,
+      images: true,
+      promotions: {
+        include: {
+          supplier: true,
+        },
+      },
+      offers: {
+        include: {
+          offer: true,
+        },
+      },
+      itineraryDays: {
+        orderBy: { day: 'asc' as const },
+        include: {
+          steps: {
+            orderBy: { order: 'asc' as const },
+          },
+        },
+      },
+    };
+  }
+
+  private async ensureRelationsExist(params: {
+    districtId: number;
+    categoryPackageId: number;
+    educationLevelId: number;
+    supplierId: number;
+  }) {
+    const [district, category, level, supplier] = await Promise.all([
+      this.prisma.district.findUnique({
+        where: { id: params.districtId },
+        select: { id: true },
+      }),
+      this.prisma.categoryPackage.findUnique({
+        where: { id: params.categoryPackageId },
+        select: { id: true },
+      }),
+      this.prisma.educationLevel.findUnique({
+        where: { id: params.educationLevelId },
+        select: { id: true },
+      }),
+      this.prisma.supplier.findUnique({
+        where: { id: params.supplierId },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!district) {
+      throw new NotFoundException('District not found');
+    }
+
+    if (!category) {
+      throw new NotFoundException('Category package not found');
+    }
+
+    if (!level) {
+      throw new NotFoundException('Education level not found');
+    }
+
+    if (!supplier) {
+      throw new NotFoundException('Supplier not found');
+    }
+  }
+
+  private timeToDate(hour: string): Date {
+    const [h, m] = hour.split(':').map(Number);
+    return new Date(Date.UTC(1970, 0, 1, h, m, 0));
+  }
+
+  private dateToTime(value: unknown): string {
+    const raw =
+      value instanceof Date ||
+      typeof value === 'string' ||
+      typeof value === 'number'
+        ? value
+        : new Date(0);
+    const date = new Date(raw);
+    const hh = String(date.getUTCHours()).padStart(2, '0');
+    const mm = String(date.getUTCMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
   }
 }
