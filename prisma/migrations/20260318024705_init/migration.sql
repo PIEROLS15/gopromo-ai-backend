@@ -1,3 +1,12 @@
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('Cash', 'Card', 'Transfer', 'Yape', 'Plin');
+
+-- CreateEnum
+CREATE TYPE "ReservationStatus" AS ENUM ('Pending', 'Confirmed', 'Cancelled', 'Completed');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('Pending', 'Paid', 'Failed', 'Refunded');
+
 -- CreateTable
 CREATE TABLE "Role" (
     "id" SERIAL NOT NULL,
@@ -52,16 +61,47 @@ CREATE TABLE "TourPackage" (
     "categoryPackageId" INTEGER NOT NULL,
     "educationLevelId" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
-    "activities" TEXT[],
-    "includes" TEXT[],
     "days" INTEGER NOT NULL DEFAULT 1,
     "minStudents" INTEGER NOT NULL DEFAULT 1,
     "supplierId" INTEGER NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "travelInsurance" BOOLEAN NOT NULL DEFAULT false,
+    "transport" BOOLEAN NOT NULL DEFAULT false,
+    "feeding" BOOLEAN NOT NULL DEFAULT false,
+    "lodging" BOOLEAN NOT NULL DEFAULT false,
+    "availableMonday" BOOLEAN NOT NULL DEFAULT false,
+    "availableTuesday" BOOLEAN NOT NULL DEFAULT false,
+    "availableWednesday" BOOLEAN NOT NULL DEFAULT false,
+    "availableThursday" BOOLEAN NOT NULL DEFAULT false,
+    "availableFriday" BOOLEAN NOT NULL DEFAULT false,
+    "availableSaturday" BOOLEAN NOT NULL DEFAULT false,
+    "availableSunday" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "TourPackage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TourItineraryDay" (
+    "id" SERIAL NOT NULL,
+    "tourPackageId" INTEGER NOT NULL,
+    "day" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+
+    CONSTRAINT "TourItineraryDay_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TourItineraryStep" (
+    "id" SERIAL NOT NULL,
+    "dayId" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "hour" TIMESTAMP(3) NOT NULL,
+    "description" TEXT,
+    "order" INTEGER NOT NULL,
+
+    CONSTRAINT "TourItineraryStep_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -89,6 +129,8 @@ CREATE TABLE "TourImage" (
     "id" SERIAL NOT NULL,
     "url" TEXT NOT NULL,
     "tourPackageId" INTEGER NOT NULL,
+    "isBanner" BOOLEAN NOT NULL DEFAULT false,
+    "order" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -147,35 +189,10 @@ CREATE TABLE "OfferTourPackage" (
 );
 
 -- CreateTable
-CREATE TABLE "ReservationStatus" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "ReservationStatus_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "PaymentMethod" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "active" BOOLEAN NOT NULL DEFAULT true,
-
-    CONSTRAINT "PaymentMethod_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "PaymentStatus" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "PaymentStatus_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Reservation" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "statusId" INTEGER NOT NULL,
+    "status" "ReservationStatus" NOT NULL DEFAULT 'Pending',
     "peopleCount" INTEGER NOT NULL,
     "totalAmount" DECIMAL(10,2) NOT NULL,
     "code" TEXT NOT NULL,
@@ -212,8 +229,8 @@ CREATE TABLE "ReservationDetailPromotion" (
 CREATE TABLE "Payment" (
     "id" SERIAL NOT NULL,
     "reservationId" INTEGER NOT NULL,
-    "methodId" INTEGER NOT NULL,
-    "statusId" INTEGER NOT NULL,
+    "method" "PaymentMethod" NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'Pending',
     "amount" DECIMAL(10,2) NOT NULL,
     "transactionRef" TEXT,
     "paidAt" TIMESTAMP(3),
@@ -257,6 +274,12 @@ CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE INDEX "User_roleId_idx" ON "User"("roleId");
+
+-- CreateIndex
+CREATE INDEX "User_createdAt_idx" ON "User"("createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Supplier_email_key" ON "Supplier"("email");
 
 -- CreateIndex
@@ -269,10 +292,34 @@ CREATE UNIQUE INDEX "Supplier_representativeName_key" ON "Supplier"("representat
 CREATE UNIQUE INDEX "Supplier_companyName_key" ON "Supplier"("companyName");
 
 -- CreateIndex
+CREATE INDEX "Supplier_roleId_idx" ON "Supplier"("roleId");
+
+-- CreateIndex
+CREATE INDEX "Supplier_active_verified_idx" ON "Supplier"("active", "verified");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TourPackage_name_key" ON "TourPackage"("name");
 
 -- CreateIndex
 CREATE INDEX "TourPackage_districtId_idx" ON "TourPackage"("districtId");
+
+-- CreateIndex
+CREATE INDEX "TourPackage_supplierId_idx" ON "TourPackage"("supplierId");
+
+-- CreateIndex
+CREATE INDEX "TourPackage_categoryPackageId_idx" ON "TourPackage"("categoryPackageId");
+
+-- CreateIndex
+CREATE INDEX "TourPackage_educationLevelId_idx" ON "TourPackage"("educationLevelId");
+
+-- CreateIndex
+CREATE INDEX "TourPackage_active_idx" ON "TourPackage"("active");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TourItineraryDay_tourPackageId_day_key" ON "TourItineraryDay"("tourPackageId", "day");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TourItineraryStep_dayId_order_key" ON "TourItineraryStep"("dayId", "order");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CategoryPackage_name_key" ON "CategoryPackage"("name");
@@ -281,22 +328,52 @@ CREATE UNIQUE INDEX "CategoryPackage_name_key" ON "CategoryPackage"("name");
 CREATE UNIQUE INDEX "EducationLevel_name_key" ON "EducationLevel"("name");
 
 -- CreateIndex
+CREATE INDEX "TourImage_tourPackageId_idx" ON "TourImage"("tourPackageId");
+
+-- CreateIndex
+CREATE INDEX "Promotion_tourPackageId_idx" ON "Promotion"("tourPackageId");
+
+-- CreateIndex
+CREATE INDEX "Promotion_supplierId_idx" ON "Promotion"("supplierId");
+
+-- CreateIndex
+CREATE INDEX "Promotion_active_idx" ON "Promotion"("active");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Offer_name_key" ON "Offer"("name");
+
+-- CreateIndex
+CREATE INDEX "Offer_active_idx" ON "Offer"("active");
+
+-- CreateIndex
+CREATE INDEX "Offer_startDate_endDate_idx" ON "Offer"("startDate", "endDate");
+
+-- CreateIndex
+CREATE INDEX "OfferTourPackage_tourPackageId_idx" ON "OfferTourPackage"("tourPackageId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OfferTourPackage_offerId_tourPackageId_key" ON "OfferTourPackage"("offerId", "tourPackageId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ReservationStatus_name_key" ON "ReservationStatus"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "PaymentMethod_name_key" ON "PaymentMethod"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "PaymentStatus_name_key" ON "PaymentStatus"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Reservation_code_key" ON "Reservation"("code");
+
+-- CreateIndex
+CREATE INDEX "Reservation_userId_idx" ON "Reservation"("userId");
+
+-- CreateIndex
+CREATE INDEX "Reservation_status_idx" ON "Reservation"("status");
+
+-- CreateIndex
+CREATE INDEX "Reservation_createdAt_idx" ON "Reservation"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "ReservationDetail_reservationId_idx" ON "ReservationDetail"("reservationId");
+
+-- CreateIndex
+CREATE INDEX "ReservationDetail_tourPackageId_idx" ON "ReservationDetail"("tourPackageId");
+
+-- CreateIndex
+CREATE INDEX "ReservationDetailPromotion_promotionId_idx" ON "ReservationDetailPromotion"("promotionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ReservationDetailPromotion_reservationDetailId_promotionId_key" ON "ReservationDetailPromotion"("reservationDetailId", "promotionId");
@@ -305,13 +382,28 @@ CREATE UNIQUE INDEX "ReservationDetailPromotion_reservationDetailId_promotionId_
 CREATE UNIQUE INDEX "Payment_reservationId_key" ON "Payment"("reservationId");
 
 -- CreateIndex
+CREATE INDEX "Payment_method_idx" ON "Payment"("method");
+
+-- CreateIndex
+CREATE INDEX "Payment_status_idx" ON "Payment"("status");
+
+-- CreateIndex
+CREATE INDEX "Payment_paidAt_idx" ON "Payment"("paidAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Department_name_key" ON "Department"("name");
+
+-- CreateIndex
+CREATE INDEX "Province_departmentId_idx" ON "Province"("departmentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Province_name_departmentId_key" ON "Province"("name", "departmentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "District_ubigeo_key" ON "District"("ubigeo");
+
+-- CreateIndex
+CREATE INDEX "District_provinceId_idx" ON "District"("provinceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "District_name_provinceId_key" ON "District"("name", "provinceId");
@@ -335,7 +427,13 @@ ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_supplierId_fkey" FOREIGN K
 ALTER TABLE "TourPackage" ADD CONSTRAINT "TourPackage_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "District"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TourImage" ADD CONSTRAINT "TourImage_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TourItineraryDay" ADD CONSTRAINT "TourItineraryDay_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TourItineraryStep" ADD CONSTRAINT "TourItineraryStep_dayId_fkey" FOREIGN KEY ("dayId") REFERENCES "TourItineraryDay"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TourImage" ADD CONSTRAINT "TourImage_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Promotion" ADD CONSTRAINT "Promotion_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -344,37 +442,28 @@ ALTER TABLE "Promotion" ADD CONSTRAINT "Promotion_tourPackageId_fkey" FOREIGN KE
 ALTER TABLE "Promotion" ADD CONSTRAINT "Promotion_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OfferTourPackage" ADD CONSTRAINT "OfferTourPackage_offerId_fkey" FOREIGN KEY ("offerId") REFERENCES "Offer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "OfferTourPackage" ADD CONSTRAINT "OfferTourPackage_offerId_fkey" FOREIGN KEY ("offerId") REFERENCES "Offer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OfferTourPackage" ADD CONSTRAINT "OfferTourPackage_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "OfferTourPackage" ADD CONSTRAINT "OfferTourPackage_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "ReservationStatus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReservationDetail" ADD CONSTRAINT "ReservationDetail_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ReservationDetail" ADD CONSTRAINT "ReservationDetail_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ReservationDetail" ADD CONSTRAINT "ReservationDetail_tourPackageId_fkey" FOREIGN KEY ("tourPackageId") REFERENCES "TourPackage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ReservationDetailPromotion" ADD CONSTRAINT "ReservationDetailPromotion_reservationDetailId_fkey" FOREIGN KEY ("reservationDetailId") REFERENCES "ReservationDetail"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ReservationDetailPromotion" ADD CONSTRAINT "ReservationDetailPromotion_reservationDetailId_fkey" FOREIGN KEY ("reservationDetailId") REFERENCES "ReservationDetail"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ReservationDetailPromotion" ADD CONSTRAINT "ReservationDetailPromotion_promotionId_fkey" FOREIGN KEY ("promotionId") REFERENCES "Promotion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_methodId_fkey" FOREIGN KEY ("methodId") REFERENCES "PaymentMethod"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "PaymentStatus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Province" ADD CONSTRAINT "Province_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

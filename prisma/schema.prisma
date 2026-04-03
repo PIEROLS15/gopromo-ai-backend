@@ -7,14 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PaymentMethod {
+  Cash
+  Card
+  Transfer
+  Yape
+  Plin
+}
+
+enum ReservationStatus {
+  Pending
+  Confirmed
+  Cancelled
+  Completed
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
 model Role {
+  /// Catálogo de roles del sistema (Admin, Supplier, User, etc.).
   id        Int        @id @default(autoincrement())
   name      String     @unique
+  /// Usuarios finales asignados a este rol.
   users     User[]
+  /// Proveedores asignados a este rol.
   suppliers Supplier[]
 }
 
 model User {
+  /// Cuentas de usuarios finales que reservan paquetes turísticos.
   id                     Int      @id @default(autoincrement())
   email                  String   @unique
   fullName               String
@@ -27,12 +53,18 @@ model User {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
+  /// Reservas creadas por el usuario.
   reservations Reservation[]
 
-  role Role @relation(fields: [roleId], references: [id])
+  /// Rol funcional del usuario dentro del sistema.
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([roleId])
+  @@index([createdAt])
 }
 
 model Supplier {
+  /// Cuentas de empresas proveedoras que publican paquetes y promociones.
   id                 Int      @id @default(autoincrement())
   email              String   @unique
   ruc                String   @unique
@@ -48,25 +80,36 @@ model Supplier {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  /// Paquetes turísticos publicados por el proveedor.
   tourPackages TourPackage[]
+  /// Promociones creadas por el proveedor.
   promotions   Promotion[]
 
-  role Role @relation(fields: [roleId], references: [id])
+  /// Rol funcional del proveedor dentro del sistema.
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([roleId])
+  @@index([active, verified])
 }
 
 model TourPackage {
-  id                 Int                 @id @default(autoincrement())
-  name               String              @unique
-  districtId         Int
-  pricePersona       Decimal             @db.Decimal(10, 2)
-  categoryPackageId  Int
-  educationLevelId   Int
-  description        String
-  activities         String[]
-  includes           String[]
-  days               Int                 @default(1)
-  minStudents        Int                 @default(1)
-  images             TourImage[]
+  /// Producto principal del negocio: paquete turístico ofertado por un proveedor.
+  id                Int     @id @default(autoincrement())
+  name              String  @unique
+  districtId        Int
+  pricePersona      Decimal @db.Decimal(10, 2)
+  categoryPackageId Int
+  educationLevelId  Int
+  description       String
+  days              Int     @default(1)
+  minStudents       Int     @default(1)
+
+  /// Galería de imágenes del paquete.
+  images TourImage[]
+
+  /// Días que conforman el itinerario del paquete.
+  itineraryDays TourItineraryDay[]
+
   supplierId         Int
   promotions         Promotion[]
   active             Boolean             @default(false)
@@ -75,15 +118,62 @@ model TourPackage {
   updatedAt          DateTime            @updatedAt
   reservationDetails ReservationDetail[]
 
-  categoryPackage CategoryPackage @relation(fields: [categoryPackageId], references: [id])
-  educationLevel  EducationLevel  @relation(fields: [educationLevelId], references: [id])
-  supplier        Supplier        @relation(fields: [supplierId], references: [id])
-  district        District        @relation(fields: [districtId], references: [id])
+  // Servicios
+  travelInsurance Boolean @default(false)
+  transport       Boolean @default(false)
+  feeding         Boolean @default(false)
+  lodging         Boolean @default(false)
+
+  // Días de disponibilidad para reservaciones
+  availableMonday    Boolean @default(false)
+  availableTuesday   Boolean @default(false)
+  availableWednesday Boolean @default(false)
+  availableThursday  Boolean @default(false)
+  availableFriday    Boolean @default(false)
+  availableSaturday  Boolean @default(false)
+  availableSunday    Boolean @default(false)
+
+  categoryPackage CategoryPackage @relation(fields: [categoryPackageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  educationLevel  EducationLevel  @relation(fields: [educationLevelId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  supplier        Supplier        @relation(fields: [supplierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  district        District        @relation(fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([districtId])
+  @@index([supplierId])
+  @@index([categoryPackageId])
+  @@index([educationLevelId])
+  @@index([active])
+}
+
+model TourItineraryDay {
+  /// Día de itinerario de un paquete (Día 1, Día 2, etc.).
+  id            Int    @id @default(autoincrement())
+  tourPackageId Int
+  day           Int
+  title         String
+
+  steps       TourItineraryStep[]
+  tourPackage TourPackage         @relation(fields: [tourPackageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tourPackageId, day])
+}
+
+model TourItineraryStep {
+  /// Actividad puntual dentro de un día de itinerario.
+  id          Int      @id @default(autoincrement())
+  dayId       Int
+  title       String
+  hour        DateTime
+  description String?
+  order       Int
+
+  day TourItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@unique([dayId, order])
 }
 
 model CategoryPackage {
+  /// Catálogo de categorías de paquetes (aventura, cultural, etc.).
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
@@ -93,6 +183,7 @@ model CategoryPackage {
 }
 
 model EducationLevel {
+  /// Catálogo de niveles educativos objetivo del paquete.
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
@@ -102,16 +193,23 @@ model EducationLevel {
 }
 
 model TourImage {
-  id            Int      @id @default(autoincrement())
+  /// Imagen asociada a un paquete turístico.
+  id            Int     @id @default(autoincrement())
   url           String
   tourPackageId Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isBanner      Boolean @default(false)
+  order         Int?
 
-  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id], onDelete: Cascade)
+
+  @@index([tourPackageId])
 }
 
 model Contact {
+  /// Mensajes recibidos desde el formulario de contacto público.
   id        Int      @id @default(autoincrement())
   name      String
   email     String
@@ -122,6 +220,7 @@ model Contact {
 }
 
 model Promotion {
+  /// Precio promocional puntual para un paquete turístico.
   id            Int     @id @default(autoincrement())
   tourPackageId Int
   price         Decimal @db.Decimal(10, 2)
@@ -132,11 +231,16 @@ model Promotion {
 
   reservationDetailPromotions ReservationDetailPromotion[]
 
-  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id])
-  supplier    Supplier    @relation(fields: [supplierId], references: [id])
+  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  supplier    Supplier    @relation(fields: [supplierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tourPackageId])
+  @@index([supplierId])
+  @@index([active])
 }
 
 model Offer {
+  /// Campaña de descuento que puede aplicarse a uno o varios paquetes.
   id              Int      @id @default(autoincrement())
   name            String   @unique
   description     String?
@@ -149,60 +253,48 @@ model Offer {
   updatedAt       DateTime @updatedAt
 
   tourPackages OfferTourPackage[]
+
+  @@index([active])
+  @@index([startDate, endDate])
 }
 
 model OfferTourPackage {
+  /// Tabla puente N:N entre ofertas y paquetes turísticos.
   id            Int @id @default(autoincrement())
   offerId       Int
   tourPackageId Int
 
-  offer       Offer       @relation(fields: [offerId], references: [id])
-  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id])
+  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([offerId, tourPackageId])
-}
-
-model ReservationStatus {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-
-  reservations Reservation[]
-}
-
-model PaymentMethod {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  active Boolean @default(true)
-
-  payments Payment[]
-}
-
-model PaymentStatus {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-
-  payments Payment[]
+  @@index([tourPackageId])
 }
 
 model Reservation {
-  id          Int     @id @default(autoincrement())
+  /// Cabecera de reserva realizada por un usuario.
+  id          Int               @id @default(autoincrement())
   userId      Int
-  statusId    Int
+  status      ReservationStatus @default(Pending)
   peopleCount Int
-  totalAmount Decimal @db.Decimal(10, 2)
-  code        String  @unique
+  totalAmount Decimal           @db.Decimal(10, 2)
+  code        String            @unique
 
-  user   User              @relation(fields: [userId], references: [id])
-  status ReservationStatus @relation(fields: [statusId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   details ReservationDetail[]
   payment Payment?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model ReservationDetail {
+  /// Detalle por paquete incluido dentro de una reserva.
   id            Int @id @default(autoincrement())
   reservationId Int
   tourPackageId Int
@@ -211,43 +303,52 @@ model ReservationDetail {
   unitPrice Decimal @db.Decimal(10, 2)
   subtotal  Decimal @db.Decimal(10, 2)
 
-  reservation Reservation @relation(fields: [reservationId], references: [id])
-  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id])
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tourPackage TourPackage @relation(fields: [tourPackageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   promotions ReservationDetailPromotion[]
 
   createdAt DateTime @default(now())
+
+  @@index([reservationId])
+  @@index([tourPackageId])
 }
 
 model ReservationDetailPromotion {
+  /// Promociones efectivamente aplicadas a un detalle de reserva.
   id                  Int     @id @default(autoincrement())
   reservationDetailId Int
   promotionId         Int
   price               Decimal @db.Decimal(10, 2)
 
-  reservationDetail ReservationDetail @relation(fields: [reservationDetailId], references: [id])
-  promotion         Promotion         @relation(fields: [promotionId], references: [id])
+  reservationDetail ReservationDetail @relation(fields: [reservationDetailId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  promotion         Promotion         @relation(fields: [promotionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([reservationDetailId, promotionId])
+  @@index([promotionId])
 }
 
 model Payment {
-  id             Int       @id @default(autoincrement())
-  reservationId  Int       @unique
-  methodId       Int
-  statusId       Int
-  amount         Decimal   @db.Decimal(10, 2)
+  /// Registro transaccional del pago asociado a una reserva.
+  id             Int           @id @default(autoincrement())
+  reservationId  Int           @unique
+  method         PaymentMethod
+  status         PaymentStatus @default(Pending)
+  amount         Decimal       @db.Decimal(10, 2)
   transactionRef String?
   paidAt         DateTime?
 
-  reservation Reservation   @relation(fields: [reservationId], references: [id])
-  method      PaymentMethod @relation(fields: [methodId], references: [id])
-  status      PaymentStatus @relation(fields: [statusId], references: [id])
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([method])
+  @@index([status])
+  @@index([paidAt])
 }
 
 model Department {
+  /// Primer nivel geográfico del ubigeo (departamento/región).
   id   Int    @id @default(autoincrement())
   name String @unique
 
@@ -255,26 +356,30 @@ model Department {
 }
 
 model Province {
+  /// Segundo nivel geográfico del ubigeo (provincia).
   id           Int    @id @default(autoincrement())
   name         String
   departmentId Int
 
-  department Department @relation(fields: [departmentId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   districts  District[]
 
   @@unique([name, departmentId])
+  @@index([departmentId])
 }
 
 model District {
+  /// Tercer nivel geográfico del ubigeo (distrito).
   id         Int     @id @default(autoincrement())
   name       String
   ubigeo     String  @unique
   inei       String?
   provinceId Int
 
-  province Province @relation(fields: [provinceId], references: [id])
+  province Province @relation(fields: [provinceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   tourPackages TourPackage[]
 
   @@unique([name, provinceId])
+  @@index([provinceId])
 }

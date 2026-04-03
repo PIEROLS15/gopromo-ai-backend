@@ -15,8 +15,31 @@ describe('TourPackagesService', () => {
     minStudents: 10,
     active: true,
     description: 'Description',
-    activities: [],
-    includes: [],
+    travelInsurance: true,
+    transport: true,
+    feeding: false,
+    lodging: false,
+    availableMonday: true,
+    availableTuesday: true,
+    availableWednesday: true,
+    availableThursday: true,
+    availableFriday: true,
+    availableSaturday: true,
+    availableSunday: false,
+    itineraryDays: [
+      {
+        day: 1,
+        title: 'Day 1',
+        steps: [
+          {
+            title: 'Recojo en hotel',
+            hour: new Date('1970-01-01T04:30:00.000Z'),
+            description: 'Inicio del tour',
+            order: 1,
+          },
+        ],
+      },
+    ],
     district: {
       name: 'District',
       province: {
@@ -43,6 +66,18 @@ describe('TourPackagesService', () => {
       delete: jest.fn(),
       count: jest.fn(),
     },
+    district: {
+      findUnique: jest.fn(),
+    },
+    categoryPackage: {
+      findUnique: jest.fn(),
+    },
+    educationLevel: {
+      findUnique: jest.fn(),
+    },
+    supplier: {
+      findUnique: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -54,6 +89,11 @@ describe('TourPackagesService', () => {
     }).compile();
 
     service = module.get<TourPackagesService>(TourPackagesService);
+
+    prismaMock.district.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.categoryPackage.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.educationLevel.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.supplier.findUnique.mockResolvedValue({ id: 1 });
   });
 
   afterEach(() => {
@@ -71,7 +111,48 @@ describe('TourPackagesService', () => {
     it('should create a tour package successfully', async () => {
       prismaMock.tourPackage.findFirst.mockResolvedValue(null);
       prismaMock.tourPackage.create.mockResolvedValue(mockTourPackage);
-      const dto = { name: 'New' } as unknown as CreateTourPackageDto;
+      const dto = {
+        name: 'New',
+        districtId: 1,
+        pricePersona: 100,
+        categoryPackageId: 1,
+        educationLevelId: 1,
+        description: 'Description',
+        days: 3,
+        minStudents: 10,
+        supplierId: 1,
+        services: {
+          travel_insurance: true,
+          transport: true,
+          feeding: false,
+          lodging: false,
+        },
+        reservation_days: {
+          monday: true,
+          tuesday: true,
+          wednesday: true,
+          thursday: true,
+          friday: true,
+          saturday: true,
+          sunday: false,
+        },
+        itinerary: {
+          days: [
+            {
+              day: 1,
+              title: 'Day 1',
+              steps: [
+                {
+                  title: 'Recojo en hotel',
+                  hour: '04:30',
+                  description: 'Inicio del tour',
+                  order: 1,
+                },
+              ],
+            },
+          ],
+        },
+      } as CreateTourPackageDto;
 
       const result = await service.create(dto);
 
@@ -161,7 +242,7 @@ describe('TourPackagesService', () => {
     it('should throw ConflictException if has active reservations', async () => {
       prismaMock.tourPackage.findUnique.mockResolvedValue({
         ...mockTourPackage,
-        reservationDetails: [{ reservation: { statusId: 1 } }],
+        reservationDetails: [{ reservation: { status: 'Pending' } }],
       });
 
       await expect(service.remove(1)).rejects.toThrow(ConflictException);
@@ -170,7 +251,7 @@ describe('TourPackagesService', () => {
     it('should delete successfully if no active reservations', async () => {
       prismaMock.tourPackage.findUnique.mockResolvedValue({
         ...mockTourPackage,
-        reservationDetails: [{ reservation: { statusId: 3 } }],
+        reservationDetails: [{ reservation: { status: 'Cancelled' } }],
       });
 
       await service.remove(1);

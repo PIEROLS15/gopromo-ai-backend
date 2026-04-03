@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { resetSequence } from './shared/reset-sequence';
 
+function toSeedTime(hour: string): Date {
+  const [h, m] = hour.split(':').map(Number);
+  return new Date(Date.UTC(1970, 0, 1, h, m, 0));
+}
+
 export async function seedTourPackages(prisma: PrismaClient) {
   console.log('🌱 Seeding tour packages...');
 
@@ -9,6 +14,8 @@ export async function seedTourPackages(prisma: PrismaClient) {
 
   await resetSequence(prisma, 'TourPackage_id_seq');
   await resetSequence(prisma, 'TourImage_id_seq');
+  await resetSequence(prisma, 'TourItineraryDay_id_seq');
+  await resetSequence(prisma, 'TourItineraryStep_id_seq');
 
   const suppliers = await prisma.supplier.findMany();
   const districts = await prisma.district.findMany({ take: 10 });
@@ -32,76 +39,116 @@ export async function seedTourPackages(prisma: PrismaClient) {
       description:
         'Un viaje inolvidable a la ciudadela inca con guía especializado.',
       pricePersona: 450.0,
-      activities: ['Caminata', 'Fotografía', 'Historia'],
-      includes: ['Entradas', 'Transporte', 'Almuerzo'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: true,
+        lodging: false,
+      },
     },
     {
       name: 'Exploración Cañón del Colca',
       description:
         'Avistamiento de cóndores y baños termales en el corazón de Arequipa.',
       pricePersona: 280.0,
-      activities: ['Observación de aves', 'Caminata', 'Relajación'],
-      includes: ['Guía', 'Transporte', 'Desayuno'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: false,
+        lodging: false,
+      },
     },
     {
       name: 'Selva Mágica Iquitos',
       description:
         'Navegación por el Amazonas y encuentro con comunidades locales.',
       pricePersona: 520.0,
-      activities: ['Navegación', 'Pesca', 'Caminata nocturna'],
-      includes: ['Alojamiento', 'Alimentación completa', 'Traslados'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: true,
+        lodging: true,
+      },
     },
     {
       name: 'Ruta del Sol Puno',
       description:
         'Visita a las islas flotantes de los Uros y la isla de Taquile.',
       pricePersona: 310.0,
-      activities: ['Navegación', 'Artesanía', 'Cultura viva'],
-      includes: ['Lancha rápida', 'Guía bilingüe', 'Almuerzo típico'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: true,
+        lodging: false,
+      },
     },
     {
       name: 'Paracas & Huacachina Express',
       description: 'Sandboarding en las dunas y tour en las Islas Ballestas.',
       pricePersona: 190.0,
-      activities: ['Buggy', 'Sandboard', 'Observación marina'],
-      includes: ['Equipos deportivos', 'Transporte', 'Seguro de viaje'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: false,
+        lodging: false,
+      },
     },
     {
       name: 'Caminata Laguna 69',
       description:
         'Reto físico en el Parque Nacional Huascarán con vistas glaciares.',
       pricePersona: 150.0,
-      activities: ['Trekking de altura', 'Fotografía de paisajes'],
-      includes: ['Box lunch', 'Guía de montaña', 'Botiquín'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: true,
+        lodging: false,
+      },
     },
     {
       name: 'Chan Chan & Huanchaco',
       description: 'Recorrido por la ciudad de barro más grande de América.',
       pricePersona: 120.0,
-      activities: ['Arqueología', 'Surf', 'Gastronomía'],
-      includes: ['Entradas museos', 'Transporte local', 'Cata de ceviche'],
+      services: {
+        travelInsurance: false,
+        transport: true,
+        feeding: false,
+        lodging: false,
+      },
     },
     {
       name: 'Kuelap: La Fortaleza en el Cielo',
       description:
         'Viaje en teleférico hacia la impresionante fortaleza Chachapoyas.',
       pricePersona: 380.0,
-      activities: ['Arqueología', 'Caminata ligera', 'Teleférico'],
-      includes: ['Boletos teleférico', 'Guía experto', 'Traslados'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: false,
+        lodging: true,
+      },
     },
     {
       name: 'Valle Sagrado de los Incas',
       description: 'Pisac, Ollantaytambo y Chinchero en un solo día.',
       pricePersona: 220.0,
-      activities: ['Mercado artesanal', 'Historia', 'Cultura'],
-      includes: ['Transporte turístico', 'Almuerzo buffet', 'Guía'],
+      services: {
+        travelInsurance: false,
+        transport: true,
+        feeding: true,
+        lodging: false,
+      },
     },
     {
       name: 'Aventura en Lunahuaná',
       description: 'Canotaje y cata de vino en el valle de Cañete.',
       pricePersona: 140.0,
-      activities: ['Canotaje', 'Rapel', 'Cata de vinos'],
-      includes: ['Equipos de seguridad', 'Instructores', 'Transporte'],
+      services: {
+        travelInsurance: true,
+        transport: true,
+        feeding: false,
+        lodging: false,
+      },
     },
   ];
 
@@ -114,13 +161,67 @@ export async function seedTourPackages(prisma: PrismaClient) {
         pricePersona: pkgData.pricePersona,
         days: 2 + (i % 5),
         minStudents: 5 + (i % 6),
-        activities: pkgData.activities,
-        includes: pkgData.includes,
         active: true,
+        travelInsurance: pkgData.services.travelInsurance,
+        transport: pkgData.services.transport,
+        feeding: pkgData.services.feeding,
+        lodging: pkgData.services.lodging,
+        availableMonday: true,
+        availableTuesday: true,
+        availableWednesday: i % 2 === 0,
+        availableThursday: true,
+        availableFriday: true,
+        availableSaturday: i % 3 !== 0,
+        availableSunday: i % 4 === 0,
         supplierId: suppliers[i % suppliers.length].id,
         districtId: districts[i % districts.length].id,
         categoryPackageId: categories[i % categories.length].id,
         educationLevelId: educationLevels[i % educationLevels.length].id,
+        itineraryDays: {
+          create: [
+            {
+              day: 1,
+              title: 'Dia 1 - Llegada y actividades principales',
+              steps: {
+                create: [
+                  {
+                    title: 'Recojo del punto de encuentro',
+                    hour: toSeedTime('06:30'),
+                    description: 'Inicio del traslado de pasajeros.',
+                    order: 1,
+                  },
+                  {
+                    title: 'Actividad central del recorrido',
+                    hour: toSeedTime('10:00'),
+                    description:
+                      'Desarrollo de la actividad principal del paquete.',
+                    order: 2,
+                  },
+                ],
+              },
+            },
+            {
+              day: 2,
+              title: 'Dia 2 - Cierre y retorno',
+              steps: {
+                create: [
+                  {
+                    title: 'Actividad complementaria',
+                    hour: toSeedTime('08:30'),
+                    description: 'Actividad de cierre antes del retorno.',
+                    order: 1,
+                  },
+                  {
+                    title: 'Retorno al punto de origen',
+                    hour: toSeedTime('16:00'),
+                    description: 'Traslado de retorno y fin del servicio.',
+                    order: 2,
+                  },
+                ],
+              },
+            },
+          ],
+        },
         images: {
           create: [
             {
@@ -132,5 +233,7 @@ export async function seedTourPackages(prisma: PrismaClient) {
     });
   }
 
-  console.log('✅ 10 Tour packages seeded successfully with images');
+  console.log(
+    '✅ 10 Tour packages seeded successfully with images and itinerary',
+  );
 }

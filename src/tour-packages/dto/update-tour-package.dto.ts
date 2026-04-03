@@ -1,11 +1,62 @@
 import {
-  IsArray,
+  IsBoolean,
   IsInt,
   IsNumber,
+  IsObject,
   IsOptional,
   IsPositive,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class UpdateTourServicesDto {
+  @IsOptional()
+  @IsBoolean()
+  travel_insurance?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  transport?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  feeding?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  lodging?: boolean;
+}
+
+export class UpdateReservationDaysDto {
+  @IsOptional()
+  @IsBoolean()
+  monday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  tuesday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  wednesday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  thursday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  friday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  saturday?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  sunday?: boolean;
+}
 
 export class UpdateTourPackageDto {
   @IsOptional()
@@ -44,16 +95,18 @@ export class UpdateTourPackageDto {
   description?: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  activities?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  includes?: string[];
-
-  @IsOptional()
   @IsInt()
   supplierId?: number;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateTourServicesDto)
+  services?: UpdateTourServicesDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateReservationDaysDto)
+  reservation_days?: UpdateReservationDaysDto;
 }
