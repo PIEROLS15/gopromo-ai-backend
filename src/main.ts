@@ -4,9 +4,6 @@ import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-import swaggerUi from 'swagger-ui-express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -58,23 +55,6 @@ async function bootstrap() {
       },
     }),
   );
-
-  const openApiPath = join(
-    process.cwd(),
-    'docs',
-    'openapi',
-    'tour-packages.openapi.json',
-  );
-  const openApiSpec = JSON.parse(readFileSync(openApiPath, 'utf-8')) as Record<
-    string,
-    unknown
-  >;
-
-  const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
-  expressApp.get('/api/docs-json', (_req, res) => {
-    res.json(openApiSpec);
-  });
 
   await app.listen(process.env.PORT ?? 3001);
 }
