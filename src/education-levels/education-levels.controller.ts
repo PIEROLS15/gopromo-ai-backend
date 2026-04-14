@@ -18,11 +18,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('education-levels')
 export class EducationLevelsController {
   constructor(private readonly service: EducationLevelsService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
   @Post()
   async create(@Body() dto: CreateEducationLevelDto) {
@@ -35,18 +35,17 @@ export class EducationLevelsController {
     };
   }
 
-  @Roles('Admin', 'Supplier')
   @Get()
   findAll(@Query() query: EducationLevelQueryDto) {
     return this.service.findAll(query);
   }
 
-  @Roles('Admin', 'Supplier')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
   @Put(':id')
   async update(
@@ -62,6 +61,7 @@ export class EducationLevelsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {

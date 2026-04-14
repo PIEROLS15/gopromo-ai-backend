@@ -34,13 +34,11 @@ export class CategoryPackagesController {
     };
   }
 
-  @Roles('Admin', 'Supplier')
   @Get()
   findAll(@Query() query: CategoryPackageQueryDto) {
     return this.service.findAll(query);
   }
 
-  @Roles('Admin', 'Supplier')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
