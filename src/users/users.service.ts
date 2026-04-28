@@ -86,6 +86,8 @@ export class UsersService {
           id: true,
           email: true,
           fullName: true,
+          phone: true,
+          educationalInstitution: true,
           role: {
             select: {
               id: true,
@@ -117,6 +119,7 @@ export class UsersService {
         email: true,
         fullName: true,
         phone: true,
+        educationalInstitution: true,
         avatar: true,
         role: {
           select: {
